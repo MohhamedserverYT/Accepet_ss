@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقديم طلب</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; background:#f5f5f5; }
+    form { background:#fff; padding:20px; margin:50px auto; width:300px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+    input, textarea { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; }
+    button { padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+    button:hover { background:#218838; }
+  </style>
+</head>
+<body>
+  <h2>📌 تقديم طلب</h2>
+  <form id="requestForm">
+    <input type="text" name="name" placeholder="الاسم" required>
+    <input type="text" name="email" placeholder="البريد الإلكتروني" required>
+    <textarea name="message" placeholder="الطلب" required></textarea>
+    <button type="submit">إرسال</button>
+  </form>
+
+  <script>
+    const BIN_ID = "68af2efcae596e708fd92370"; 
+    const API_KEY = "$2a$10$3QX2xvSbo89h3JUexvA2DuodnnL2y64qkhfuLbTbfUf5z71qouZeu"; // لازم تحطه من JSONBin
+
+    document.getElementById("requestForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      let formData = new FormData(this);
+      let request = {};
+      formData.forEach((value, key) => request[key] = value);
+      request.status = "قيد المراجعة";
+
+      let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        method: "GET",
+        headers: { "X-Master-Key": API_KEY }
+      });
+      let data = await response.json();
+      let requests = data.record.requests || [];
+      requests.push(request);
+
+      let update = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify({ requests })
+      });
+
+      if (update.ok) {
+        alert("✅ تم إرسال الطلب!");
+        this.reset();
+      } else {
+        alert("❌ حصل خطأ.");
+      }
+    });
+  </script>
+</body>
+</html>
