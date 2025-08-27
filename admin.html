@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f0f0f0; padding:20px; }
+    .card { background:#fff; padding:15px; margin:10px 0; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); }
+    button { margin:5px; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+    .accept { background:#28a745; color:#fff; }
+    .reject { background:#dc3545; color:#fff; }
+  </style>
+</head>
+<body>
+  <h2>📋 الطلبات</h2>
+  <div id="requests"></div>
+
+  <script>
+    const BIN_ID = "68af2efcae596e708fd92370"; 
+    const API_KEY = "$2a$10$3QX2xvSbo89h3JUexvA2DuodnnL2y64qkhfuLbTbfUf5z71qouZeuss"; 
+
+    async function loadRequests() {
+      let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { "X-Master-Key": API_KEY }
+      });
+      let data = await response.json();
+      let requests = data.record.requests || [];
+      let container = document.getElementById("requests");
+      container.innerHTML = "";
+
+      requests.forEach((req, index) => {
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <p><b>الاسم:</b> ${req.name}</p>
+          <p><b>الإيميل:</b> ${req.email}</p>
+          <p><b>الطلب:</b> ${req.message}</p>
+          <p><b>الحالة:</b> ${req.status}</p>
+          <button class="accept" onclick="updateStatus(${index}, 'مقبول')">✅ قبول</button>
+          <button class="reject" onclick="updateStatus(${index}, 'مرفوض')">❌ رفض</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function updateStatus(index, status) {
+      let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { "X-Master-Key": API_KEY }
+      });
+      let data = await response.json();
+      let requests = data.record.requests || [];
+      requests[index].status = status;
+
+      await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify({ requests })
+      });
+
+      loadRequests();
+    }
+
+    loadRequests();
+  </script>
+</body>
+</html>
